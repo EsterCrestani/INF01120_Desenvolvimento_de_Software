@@ -27,9 +27,8 @@ class ReproducaoAudio:
         
         try:
             self._output = pygame.midi.Output(porta_destino)
-            print(f"Sucesso: Conectado ao dispositivo de áudio ID {porta_destino}")
-        except Exception as e:
-            print(f"Aviso: Não foi possível conectar ao dispositivo ID {porta_destino}. Erro: {e}")
+        except Exception:
+            pass  # falha silenciosa; notas simplesmente nao soam
 
     def _validarLimite(self, valor: int, minimo: int, maximo: int) -> int:
         return max(minimo, min(valor, maximo))
