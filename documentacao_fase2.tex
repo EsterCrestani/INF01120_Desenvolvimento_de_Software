@@ -1,0 +1,249 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{parskip}
+
+\geometry{
+  top=2.5cm,
+  bottom=2.5cm,
+  left=3cm,
+  right=2.5cm
+}
+
+% Cores
+\definecolor{azulprincipal}{RGB}{70, 130, 180}
+\definecolor{azulescuro}{RGB}{25, 25, 112}
+\definecolor{cinza}{RGB}{100, 100, 100}
+
+% Cabeçalho e rodapé
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{cinza} Gerador de Fugas Musicais}
+\fancyhead[R]{\small\color{cinza} Desenvolvimento de Software}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Formatação de títulos
+\titleformat{\section}{\large\bfseries\color{azulescuro}}{}{0em}{\thesection\quad}
+\titleformat{\subsection}{\normalsize\bfseries\color{azulprincipal}}{}{0em}{\thesubsection\quad}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=azulescuro,
+  urlcolor=azulprincipal
+}
+
+% -------------------------------------------------------
+\begin{document}
+
+% Capa
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\Large\bfseries\color{azulescuro} Trabalho de Desenvolvimento de Software\par}
+  \vspace{0.5cm}
+  {\large\color{cinza} Arthur Rodrigues Padilha, Ester de Lemos Crestani,\\ Isaac de Brito Pereira, Leônidas Lewy, responsavelA\par}
+  \vspace{2cm}
+  {\Huge\bfseries\color{azulprincipal} Gerador de Fugas Musicais\par}
+  \vspace{1cm}
+  {\large\bfseries Lista de Requisitos do Sistema\par}
+  \vspace{0.5cm}
+  {\normalsize 2\textordfeminine{} Fase do Trabalho\par}
+  \vfill
+  {\normalsize Porto Alegre, Maio de 2026}
+\end{titlepage}
+
+% Sumário
+\tableofcontents
+\newpage
+
+% -------------------------------------------------------
+\section{Visão Geral do Sistema}
+
+O \textbf{Gerador de Fugas Musicais} é um software que converte texto em saída sonora, mapeando cada caractere para notas, pausas e alterações de configuração, focando agora na geração de música polifônica em formato de "fuga" (estilo Johann Sebastian Bach). Cada linha do texto representa uma voz independente tocada simultaneamente. O sistema suporta leitura/gravação de arquivos TXT e exportação para arquivos MIDI.
+
+\subsection{Tecnologias Utilizadas}
+
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{Linguagem:} Python 3.12
+  \item \textbf{Interface Gráfica:} CustomTkinter (substituiu Tkinter padrão para visual moderno)
+  \item \textbf{Gerenciador de dependências:} UV
+  \item \textbf{Versionamento:} Git e GitHub
+  \item \textbf{Framework de testes:} PyTest
+  \item \textbf{Áudio em tempo real:} pygame.midi
+  \item \textbf{Geração de arquivos MIDI:} mido
+\end{itemize}
+
+% -------------------------------------------------------
+\section{Requisitos Funcionais}
+
+Os requisitos funcionais descrevem as funcionalidades que o sistema deve oferecer ao usuário.
+
+\subsection{RF01 — Entrada de Texto pelo Usuário}
+
+O sistema deve disponibilizar uma interface com uma caixa de texto onde o usuário possa digitar livremente sua sequência de caracteres ou carregá-la de um arquivo.
+
+\begin{itemize}[leftmargin=2cm]
+  \item A entrada pode ser feita via digitação ou carregamento de arquivo TXT.
+  \item O campo deve ser editável.
+  \item Deve ser possível salvar o texto modificado de volta em um arquivo TXT.
+  \item Cada linha no texto representa uma \textbf{voz musical independente}.
+\end{itemize}
+
+\subsection{RF02 — Interpretação da Sequência em Fuga}
+
+O sistema deve processar a entrada onde cada linha (voz) tem configurações iniciais cíclicas de oitava, volume e instrumento (Voz 0: Oitava 6, Vol 100, Piano; Voz 1: Oitava 5, Vol 80, Órgão, etc.).
+
+\begin{center}
+\begin{tabular}{>{\bfseries}p{3.5cm} p{9cm}}
+  \toprule
+  Caractere(s) & Comportamento \\
+  \midrule
+  A a G (maiúsc.) & Notas musicais Lá a Sol \\
+  H & Si bemol \\
+  Mb & Mi bemol \\
+  a--h (minúsc.) & Silêncio/Pausa \\
+  ! & Altera instrumento para Harmonica (MIDI 22) \\
+  ; & Altera instrumento para Tubular Bells (MIDI 14) \\
+  , & Altera instrumento para Church Organ (MIDI 19) \\
+  O, I, U & Altera instrumento para Gaita de Foles/Bagpipe (MIDI 109) \\
+  Espaço & Dobra o volume da voz atual \\
+  ? & Aumenta a oitava da voz atual \\
+  V & Diminui a oitava da voz atual \\
+  {>} & Aumenta o BPM global em 10 \\
+  {<} & Diminui o BPM global em 10 \\
+  {[}n{]} no início da linha & Atraso de \textit{n} beats antes da voz começar \\
+  Outras letras / símbolos & Repetem a nota anterior; se não houver nota anterior, geram Silêncio \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{RF03 — Geração e Reprodução Polifônica}
+
+O sistema deve reproduzir os tokens de todas as vozes em tempo real e de forma sincronizada (polifonia). A classe \texttt{ReproducaoAudio} recebe notas, volume, oitava e o canal MIDI correspondente.
+
+\subsection{RF04 — Exportação de Arquivo MIDI}
+
+Além da saída sonora, o sistema deve salvar toda a música gerada em um arquivo \texttt{.mid} padrão ao final da reprodução, na pasta \texttt{saida/}.
+
+\subsection{RF05 — Controles de Interface Gráfica (5 Telas)}
+
+O sistema possui um fluxo de navegação entre telas:
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{Tela Inicial:} Botão ``Começar'' e modal ``Informações'' com a legenda de mapeamento.
+  \item \textbf{Tela de Entrada:} Carregamento de TXT e digitação da sequência, com legenda detalhada visível.
+  \item \textbf{Tela de Configurações:} Configuração por voz (instrumento, oitava, BPM, volume) com controles interativos.
+  \item \textbf{Tela de Reprodução:} Exibe o estado em tempo real de cada voz (nota atual, oitava, instrumento, volume, status).
+  \item \textbf{Tela Final:} Informa o caminho do arquivo \texttt{.mid} salvo e botão para nova sequência.
+\end{itemize}
+
+
+% -------------------------------------------------------
+\section{Requisitos Não Funcionais}
+
+\subsection{RNF01 — Linguagem e Plataforma}
+O sistema deve ser implementado em Python, utilizando UV para dependências e Git/GitHub para versionamento.
+
+\subsection{RNF02 — Modularidade e Testabilidade (SOLID)}
+As classes devem possuir responsabilidade única, com testes unitários (PyTest) desenvolvidos simultaneamente à criação das classes (ex: \texttt{teste\_maestro.py}).
+
+\subsection{RNF03 — Compatibilidade}
+Deve utilizar \texttt{pygame.midi} para o áudio em tempo real e \texttt{mido} para a geração dos arquivos `.mid`.
+
+% -------------------------------------------------------
+\section{Modelagem das Classes Principais}
+
+\subsection{Classe \texttt{Voz}}
+Encapsula o estado independente de uma linha de texto (uma voz musical). Controla sua própria oitava, volume, canal e instrumento.
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{Atributos:} \texttt{id\_voz: int}, \texttt{linha\_texto: str}, \texttt{oitava\_atual: int}, \texttt{volume\_atual: int}, \texttt{instrumento\_atual: int}, \texttt{canal: int}, \texttt{atraso\_inicial: int}, \texttt{nota\_anterior: str}.
+  \item \textbf{Métodos Principais:}
+    \begin{itemize}
+      \item \texttt{\_parse\_inicio()} \textbf{->} Método interno que lê o início da linha reconhecendo, em sequência: caractere de instrumento (\texttt{!}, \texttt{;}, \texttt{,}), atraso \texttt{[n]}, e posiciona o leitor no primeiro token de nota.
+      \item \texttt{ler\_proximo\_token()} \textbf{->} Retorna um \texttt{dict} com tipo de evento (NOTA, PAUSA, INSTRUMENTO, BPM\_UP, etc.) e o caractere lido.
+      \item \texttt{has\_next()} \textbf{->} Retorna \texttt{bool} indicando se ainda há caracteres a processar.
+      \item \texttt{reiniciar\_estado()} \textbf{->} Redefine a leitura para o início.
+    \end{itemize}
+  \item \textbf{Entrada:} Inteiro (ID da voz, define parâmetros cíclicos) e string (linha de texto).
+  \item \textbf{Saída:} Tokens sequenciais (dicionários) para o Maestro executar.
+\end{itemize}
+
+\subsection{Classe \texttt{Interpretador} (Partitura)}
+Responsável por receber o texto completo da composição, dividi-lo em vozes e gerenciar essas instâncias.
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{Atributos:} \texttt{vozes: List[Voz]}.
+  \item \textbf{Métodos Principais:}
+    \begin{itemize}
+      \item \texttt{\_inicializar\_vozes(texto: str)} \textbf{->} Instancia as vozes quebrando o texto por quebra de linhas.
+      \item \texttt{get\_vozes()} \textbf{->} Retorna a lista de objetos \texttt{Voz}.
+    \end{itemize}
+  \item \textbf{Entrada:} Uma única string (\texttt{str}) com o texto cru completo digitado pelo usuário.
+  \item \textbf{Saída:} Uma coleção estruturada de objetos \texttt{Voz} configurados.
+\end{itemize}
+
+\subsection{Classe \texttt{Maestro}}
+Orquestrador central do sistema. Roda o loop musical processando todas as vozes simultaneamente (polifonia) e controlando o tempo.
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{Atributos:} \texttt{reproducao: ReproducaoAudio}, \texttt{gerador\_midi: GeradorMIDI}, \texttt{bpm: int}, \texttt{partitura: Interpretador}.
+  \item \textbf{Métodos Principais:}
+    \begin{itemize}
+      \item \texttt{preparar(texto: str)} \textbf{->} Inicializa a Partitura e prepara os geradores.
+      \item \texttt{tocar()} \textbf{->} Inicia a \textit{thread} de reprodução e envia configurações iniciais aos canais.
+      \item \texttt{\_loop\_musical()} \textbf{->} Avança beat por beat, extraindo um token de cada voz e delegando o comando de tocar ou pausar. Controla a thread e os sleeps.
+    \end{itemize}
+  \item \textbf{Entrada:} Recebe comandos de interface (texto bruto na preparação) e os tokens consumidos da Partitura.
+  \item \textbf{Saída:} Chamadas de funções acopladas para enviar dados estruturados (nota, canal, volume) para as classes de Áudio e MIDI.
+\end{itemize}
+
+\subsection{Classe \texttt{ReproducaoAudio}}
+Responsável por interagir diretamente com a API do sistema operacional (\texttt{pygame.midi}) para produzir sons multitimbrais em tempo real.
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{Atributos:} \texttt{\_output: pygame.midi.Output}.
+  \item \textbf{Métodos Principais:}
+    \begin{itemize}
+      \item \texttt{reproduzirNota(nota: str, oitava: int, volume: int, canal: int)} \textbf{->} Toca a nota no hardware.
+      \item \texttt{silenciarNota(nota: str, oitava: int, canal: int)} \textbf{->} Para o som emitindo Note Off.
+      \item \texttt{setInstrumento(id\_midi: int, canal: int)} \textbf{->} Altera o timbre do canal.
+    \end{itemize}
+  \item \textbf{Entrada:} Instruções atômicas enviadas pelo Maestro, contendo a string da nota exata, seu volume dinâmico, sua oitava e o canal alvo.
+  \item \textbf{Saída:} Sinais de áudio para os alto-falantes por meio da biblioteca MIDI subjacente.
+\end{itemize}
+
+\subsection{Classes de Suporte}
+\begin{itemize}[leftmargin=2cm]
+  \item \textbf{\texttt{GeradorMIDI}:} Transforma os eventos despachados pelo Maestro em mensagens do formato \texttt{mido} e salva o arquivo final \texttt{.mid}. Recebe notas/tempos exatos e entrega um arquivo de mídia compilado.
+  \item \textbf{\texttt{GerenciadorArquivo}:} Fornece métodos estáticos para \texttt{ler\_arquivo\_texto(caminho)} e \texttt{salvar\_arquivo\_texto(caminho, conteudo)}. Recebe strings e caminhos e atua diretamente no sistema de arquivos.
+\end{itemize}
+
+% -------------------------------------------------------
+\section{Divisão de Responsabilidades}
+
+\begin{center}
+\begin{tabular}{>{\bfseries}p{4cm} p{9cm}}
+  \toprule
+  Tarefa & Responsáveis \\
+  \midrule
+  Lista de requisitos & Ester Crestani (Atualização), Isaac (Revisão) \\
+  Lista de classes & Ester Crestani (Atualização), Isaac (Revisão) \\
+  Interfaces & Ester Crestani (Atualização e Formatação visual) \\
+  Front-end & Ester Crestani \\
+  Main (back-end) & responsavelA \\
+  Classe \texttt{Voz} & Ester Crestani \\
+  Classe \texttt{Interpretador} & responsavelA \\
+  Classe \texttt{Maestro} & Arthur \\
+  Classe \texttt{ReproducaoAudio} & Isaac de Brito Pereira \\
+  Testes & Desenvolvidos pelos responsáveis de cada classe \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}
