@@ -52,7 +52,7 @@ class Voz:
         self.instrumento_base = INSTRUMENTOS_CICLICOS[id_voz % TAMANHO_CICLO_VOZ]
         
         self.canal = id_voz % CANAIS_MIDI_TOTAL # MIDI suporta canais de 0 a 15
-        
+
         self.reiniciar_estado()
         
     def reiniciar_estado(self):

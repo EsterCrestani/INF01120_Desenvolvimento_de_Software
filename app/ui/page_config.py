@@ -42,8 +42,25 @@ class PageConfig(ctk.CTkFrame):
     def on_show(self):
         for w in self.scroll.winfo_children():
             w.destroy()
+        self._criar_config_global()
         for voz in self.controller.maestro.partitura.get_vozes():
             self._criar_linha_voz(voz)
+
+    def _criar_config_global(self):
+        bloco = ctk.CTkFrame(self.scroll, fg_color="transparent")
+        bloco.pack(fill="x", pady=6)
+
+        ctk.CTkLabel(
+            bloco, text="Geral",
+            font=("Arial", 15, "bold"), text_color=COR_BOTAO_ESCURO
+        ).pack()
+
+        linha = ctk.CTkFrame(bloco, fg_color="transparent")
+        linha.pack()
+
+        self._seta(linha, "Andamento:", f"{self.controller.maestro.bpm} BPM",
+                   lambda lbl: self._alt_bpm(-10, lbl),
+                   lambda lbl: self._alt_bpm(+10, lbl))
 
     def _criar_linha_voz(self, voz):
         bloco = ctk.CTkFrame(self.scroll, fg_color="transparent")
@@ -67,10 +84,6 @@ class PageConfig(ctk.CTkFrame):
         self._dropdown(linha, "Oitava:", oitavas, f"Oitava {voz.oitava_base}",
                        lambda val, v=voz: setattr(v, "oitava_atual",
                                                   int(val.replace("Oitava ", ""))))
-
-        self._seta(linha, "Andamento:", f"{self.controller.maestro.bpm} BPM",
-                   lambda lbl: self._alt_bpm(-10, lbl),
-                   lambda lbl: self._alt_bpm(+10, lbl))
 
         self._seta(linha, "Volume:", str(voz.volume_atual),
                    lambda lbl, v=voz: self._alt_vol(v, -10, lbl),
