@@ -39,7 +39,7 @@ class PagePlaying(ctk.CTkFrame):
         for w in self.scroll.winfo_children():
             w.destroy()
         self._labels.clear()
-        for voz in self.controller.maestro.partitura.get_vozes():
+        for voz in self.controller.maestro.vozes:
             self._criar_card_voz(voz)
         self._polling = True
         self._poll()
@@ -88,19 +88,19 @@ class PagePlaying(ctk.CTkFrame):
         if not self._polling:
             return
         maestro = self.controller.maestro
-        if not maestro.partitura:
+        if not maestro.vozes:
             return
-        for voz in maestro.partitura.get_vozes():
+        for voz in maestro.vozes:
             lbls = self._labels.get(voz.id_voz)
             if not lbls:
                 continue
             if not voz.has_next():
                 lbls["status"].configure(text="✅ Concluída", text_color="#22aa55")
-            elif voz.indice_leitura <= voz.atraso_inicial:
+            elif voz.partitura.posicao == 0:
                 lbls["status"].configure(text="⏳ Aguardando...", text_color="#888888")
             else:
                 lbls["status"].configure(text="▶️ Tocando", text_color=COR_BOTAO_ESCURO)
-            lbls["nota"].configure(text=voz.nota_anterior or "—")
+            lbls["nota"].configure(text=voz.nota_atual or "—")
             lbls["oitava"].configure(text=str(voz.oitava_atual))
             lbls["instrumento"].configure(
                 text=NOMES_MIDI.get(voz.instrumento_atual, f"MIDI #{voz.instrumento_atual}")

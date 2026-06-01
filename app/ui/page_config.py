@@ -43,7 +43,7 @@ class PageConfig(ctk.CTkFrame):
         for w in self.scroll.winfo_children():
             w.destroy()
         self._criar_config_global()
-        for voz in self.controller.maestro.partitura.get_vozes():
+        for voz in self.controller.maestro.vozes:
             self._criar_linha_voz(voz)
 
     def _criar_config_global(self):

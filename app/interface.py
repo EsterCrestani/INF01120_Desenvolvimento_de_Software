@@ -44,5 +44,5 @@ class InterfaceApp:
         if not os.path.exists("saida"):
             os.makedirs("saida")
         self.caminho_midi_salvo = os.path.abspath("saida/arquivo.mid")
-        self.maestro.salvar_midi(self.caminho_midi_salvo)
+        self.maestro.gerador_midi.salvar(self.caminho_midi_salvo)
         self.root.after(0, lambda: self.show_frame("PageFinished"))
