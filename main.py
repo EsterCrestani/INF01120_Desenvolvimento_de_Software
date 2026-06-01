@@ -1,16 +1,18 @@
 import os
 import warnings
 
+import customtkinter as ctk  # pyright: ignore[reportMissingTypeStubs], usado conforme documentação
+
+from app.interface import InterfaceApp
+
 # Suprime o banner do pygame e o aviso de pkg_resources
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"
 warnings.filterwarnings("ignore", category=UserWarning, module="pygame")
 
-import customtkinter as ctk
-from app.interface import InterfaceApp
-
 def main():
     root = ctk.CTk()
-    app = InterfaceApp(root)
+    InterfaceApp(root)
+
     root.mainloop()
 
 if __name__ == "__main__":
