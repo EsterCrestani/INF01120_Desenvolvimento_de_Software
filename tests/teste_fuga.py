@@ -9,17 +9,19 @@ def test_voz_inicializacao():
     assert voz.oitava_base == 6
     assert voz.volume_base == 100
     assert voz.instrumento_base == 0
-    assert voz.atraso_inicial == 4
+    # O atraso [4] vira 4 tokens de pausa no início da partitura
+    assert [t.tipo for t in voz.partitura.tokens[:4]] == ['PAUSA'] * 4
 
     voz2 = Voz(1, "G A B")
     assert voz2.oitava_base == 5
     assert voz2.volume_base == 80
     assert voz2.instrumento_base == 20
-    assert voz2.atraso_inicial == 0
+    # Sem atraso: a partitura começa direto na nota
+    assert voz2.partitura.tokens[0].tipo == 'NOTA'
 
 def test_voz_tokenizacao():
     voz = Voz(0, "CMb!")
-    tokens = voz.partitura.get_tokens()
+    tokens = voz.partitura.tokens
 
     assert len(tokens) == 3
     assert tokens[0].char == 'C'
@@ -28,7 +30,7 @@ def test_voz_tokenizacao():
 
 def test_partitura_tokeniza_linha():
     partitura = Partitura("CMb!")
-    tokens = partitura.get_tokens()
+    tokens = partitura.tokens
     assert len(tokens) == 3
     assert [t.tipo for t in tokens] == ['NOTA', 'NOTA', 'INSTRUMENTO']
 
@@ -43,8 +45,8 @@ def test_maestro_divide_vozes():
     maestro.preparar("[0] C D E F\n[4] G A B C")
     vozes = maestro.vozes
     assert len(vozes) == 2
-    assert vozes[0].atraso_inicial == 0
-    assert vozes[1].atraso_inicial == 4
+    assert vozes[0].partitura.tokens[0].tipo != 'PAUSA'           # [0] -> sem pausas
+    assert [t.tipo for t in vozes[1].partitura.tokens[:4]] == ['PAUSA'] * 4  # [4]
 
 def test_gerador_midi(tmp_path):
     maestro = Maestro()

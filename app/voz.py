@@ -7,7 +7,6 @@ from app.constantes_musicais import (
     VOLUME_DECREMENTO_CICLO,
     CANAIS_MIDI_TOTAL,
     INSTRUMENTOS_CICLICOS,
-    MAPA_INST_INICIAL,
 )
 
 
@@ -16,9 +15,10 @@ class Voz:
     Agrega a configuração de uma voz (oitava, volume, instrumento, canal e
     atraso inicial) e possui uma Partitura com a sequência de tokens.
 
-    A configuração base é derivada ciclicamente do id_voz; o prefixo da linha
-    (instrumento inicial `! ; ,` e atraso `[n]`) é interpretado aqui, pois é
-    configuração da voz — a tokenização do conteúdo musical fica na Partitura.
+    A configuração base é derivada ciclicamente do id_voz. A linha completa é
+    entregue à Partitura, que apenas a tokeniza — inclusive o `!;,` inicial (vira
+    TokenInstrumento) e o atraso `[n]` (vira tokens de pausa). A Voz não interpreta
+    o prefixo: guarda só as configurações cíclicas.
     """
 
     def __init__(self, id_voz: int, linha_texto: str):
@@ -37,13 +37,12 @@ class Voz:
 
         self.canal = id_voz % CANAIS_MIDI_TOTAL  # MIDI suporta canais de 0 a 15
 
-        # Interpreta o prefixo (instrumento inicial + atraso) e separa o conteúdo musical
-        self.atraso_inicial, linha_musical = self._parse_inicio(linha_texto)
-
-        # A Partitura varre o conteúdo musical e guarda a lista de tokens
-        self.partitura = Partitura(linha_musical)
+        # A Partitura apenas tokeniza a linha (incluindo `!;,` inicial e `[n]`).
+        self.partitura = Partitura(linha_texto)
+        self.nota_atual: str | None = None
 
         self.reiniciar_estado()
+
 
     def reiniciar_estado(self):
         self.oitava_atual = self.oitava_base
@@ -51,6 +50,7 @@ class Voz:
         self.instrumento_atual = self.instrumento_base
         self.nota_atual = None
         self.partitura.reiniciar()
+
 
     def preparar_para_tocar(self, reproducao, gerador_midi):
         """
@@ -61,45 +61,6 @@ class Voz:
         reproducao.set_instrumento_no_canal(self.instrumento_atual, self.canal)
         gerador_midi.registrar_instrumento(self.id_voz, self.canal, self.instrumento_atual)
 
-    def _parse_inicio(self, texto: str) -> tuple[int, str]:
-        """
-        Analisa o início da linha para extrair, em ordem:
-          1. Caractere de instrumento inicial (!, ;, ,)
-          2. Atraso [n]
-
-        Atualiza self.instrumento_base e retorna (atraso, conteudo_musical),
-        onde conteudo_musical é a parte da linha após o prefixo.
-        """
-        pos = 0
-
-        # Ignora espaços iniciais
-        while pos < len(texto) and texto[pos] == ' ':
-            pos += 1
-
-        # Caractere de instrumento inicial?
-        if pos < len(texto) and texto[pos] in MAPA_INST_INICIAL:
-            self.instrumento_base = MAPA_INST_INICIAL[texto[pos]]
-            pos += 1
-            # Pula espaço(s) após o símbolo
-            while pos < len(texto) and texto[pos] == ' ':
-                pos += 1
-
-        # Atraso [n]?
-        atraso = 0
-        if pos < len(texto) and texto[pos] == '[':
-            fim = texto.find(']', pos)
-            if fim != -1:
-                try:
-                    atraso = int(texto[pos + 1:fim])
-                    pos = fim + 1
-                except ValueError:
-                    pass
-
-        # Pula espaço após o atraso
-        while pos < len(texto) and texto[pos] == ' ':
-            pos += 1
-
-        return atraso, texto[pos:]
 
     def has_next(self) -> bool:
         return self.partitura.has_next()

@@ -4,7 +4,6 @@ from typing import Callable, List
 from app.voz import Voz
 from app.reproducao_audio import ReproducaoAudio
 from app.gerador_midi import GeradorMIDI
-from app.tokens import DURACAO_BEAT_PADRAO
 
 # Constantes de Andamento (BPM)
 BPM_PADRAO = 120
@@ -56,7 +55,6 @@ class Maestro:
     def _loop_musical(self):
         """Loop principal que processa um beat de cada vez para todas as vozes."""
         vozes = self.vozes
-        beats = {voz.id_voz: 0 for voz in vozes}
         notas_tocando = {}
 
         while self.tocando and any(voz.has_next() for voz in vozes):
@@ -64,21 +62,18 @@ class Maestro:
             teve_evento = False
 
             for voz in vozes:
-                if not voz.has_next():
-                    continue
+                # Drena os tokens de controle (que não ocupam beat) até executar o
+                # primeiro token que ocupa um beat (nota/pausa). Aí passa para a
+                # próxima voz; o sleep do beat acontece após percorrer todas.
+                while voz.has_next():
+                    token = voz.partitura.proximo_token()
+                    if token is None:
+                        break
 
-                # Gerencia o atraso inicial de cada voz
-                if beats[voz.id_voz] < voz.atraso_inicial:
-                    beats[voz.id_voz] += 1
-                    self.gerador_midi.registrar_pausa(voz.id_voz, DURACAO_BEAT_PADRAO)
-                    continue
-
-                token = voz.partitura.proximo_token()
-                if not token:
-                    continue
-
-                teve_evento = True
-                token.processar(voz, self, notas_tocando)
+                    teve_evento = True
+                    token.processar(voz, self, notas_tocando)
+                    if token.ocupa_beat:
+                        break
 
             if not teve_evento and not any(voz.has_next() for voz in vozes):
                 break

@@ -33,8 +33,8 @@ INSTRUMENTOS_CICLICOS = [
     INSTRUMENTO_BASSOON,
 ]
 
-# Símbolo de instrumento inicial (início da linha) -> número MIDI
-MAPA_INST_INICIAL = {
+# Símbolo de instrumento (em qualquer posição da linha) -> número MIDI
+MAPA_INSTRUMENTO_SIMBOLO = {
     '!': INSTRUMENTO_HARMONICA,
     ';': INSTRUMENTO_TUBULAR_BELLS,
     ',': INSTRUMENTO_CHURCH_ORGAN,
