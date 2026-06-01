@@ -1,6 +1,19 @@
 import time
 import pygame.midi
 
+# Constantes do Protocolo MIDI
+MIDI_MIN_VAL = 0
+MIDI_MAX_VAL = 127
+MIDI_MIN_CHANNEL = 0
+MIDI_MAX_CHANNEL = 15
+MIDI_TOTAL_CHANNELS = 16
+MIDI_CONTROL_CHANGE_BASE = 0xB0
+MIDI_ALL_NOTES_OFF = 123
+
+# Constantes de Teoria Musical
+SEMITONS_POR_OITAVA = 12
+MS_EM_UM_SEGUNDO = 1000.0
+
 class ReproducaoAudio:
     
     def __init__(self):
@@ -44,9 +57,9 @@ class ReproducaoAudio:
             raise ValueError(f"Nota inválida: {nota_char}")
 
         nota_base = mapa_notas[nota_upper]
-        nota_midi = (oitava + 1) * 12 + nota_base
+        nota_midi = (oitava + 1) * SEMITONS_POR_OITAVA + nota_base
         
-        return self._validarLimite(nota_midi, 0, 127)
+        return self._validarLimite(nota_midi, MIDI_MIN_VAL, MIDI_MAX_VAL)
 
     # ==========================================
     #             MÉTODOS PÚBLICOS
@@ -57,8 +70,8 @@ class ReproducaoAudio:
             return
         try:
             nota_midi = self._calcularNotaMidi(nota, oitava)
-            volume_seguro = self._validarLimite(volume, 0, 127)
-            canal_seguro = self._validarLimite(canal, 0, 15)
+            volume_seguro = self._validarLimite(volume, MIDI_MIN_VAL, MIDI_MAX_VAL)
+            canal_seguro = self._validarLimite(canal, MIDI_MIN_CHANNEL, MIDI_MAX_CHANNEL)
             self._output.note_on(nota_midi, volume_seguro, canal_seguro)
         except ValueError:
             pass # Ignora notas inválidas silenciosamente
@@ -68,22 +81,22 @@ class ReproducaoAudio:
             return
         try:
             nota_midi = self._calcularNotaMidi(nota, oitava)
-            canal_seguro = self._validarLimite(canal, 0, 15)
-            self._output.note_off(nota_midi, 0, canal_seguro)
+            canal_seguro = self._validarLimite(canal, MIDI_MIN_CHANNEL, MIDI_MAX_CHANNEL)
+            self._output.note_off(nota_midi, MIDI_MIN_VAL, canal_seguro)
         except ValueError:
             pass
 
     def executarPausa(self, ms: int) -> None:
-        time.sleep(ms / 1000.0)
+        time.sleep(ms / MS_EM_UM_SEGUNDO)
 
     def setInstrumento(self, id_midi: int, canal: int) -> None:
-        id_valido = self._validarLimite(id_midi, 0, 127)
-        canal_seguro = self._validarLimite(canal, 0, 15)
+        id_valido = self._validarLimite(id_midi, MIDI_MIN_VAL, MIDI_MAX_VAL)
+        canal_seguro = self._validarLimite(canal, MIDI_MIN_CHANNEL, MIDI_MAX_CHANNEL)
         if self._output:
             self._output.set_instrument(id_valido, canal_seguro)
 
     def pararReproducao(self) -> None:
         if not self._output:
             return
-        for canal in range(16):
-            self._output.write_short(0xB0 + canal, 123, 0) # All Notes Off
+        for canal in range(MIDI_TOTAL_CHANNELS):
+            self._output.write_short(MIDI_CONTROL_CHANGE_BASE + canal, MIDI_ALL_NOTES_OFF, 0) # All Notes Off

@@ -5,6 +5,15 @@ from app.partitura import Partitura
 from app.reproducao_audio import ReproducaoAudio
 from app.gerador_midi import GeradorMIDI
 
+# Constantes de Andamento (BPM)
+BPM_PADRAO = 120
+BPM_AJUSTE = 10
+BPM_MINIMO = 10
+
+# Constantes de Tempo
+SEGUNDOS_POR_MINUTO = 60.0
+DURACAO_BEAT_PADRAO = 1.0
+
 class Maestro:
     """
     Classe responsável por orquestrar a execução das vozes, gerenciar o andamento (BPM)
@@ -14,13 +23,13 @@ class Maestro:
         self.reproducao = ReproducaoAudio()
         self.gerador_midi = None
         self.tocando = False
-        self.bpm = 120
+        self.bpm = BPM_PADRAO
         self.partitura = None
         self.callback_finalizacao = callback_finalizacao
         
     def preparar(self, texto: str):
         self.partitura = Partitura(texto)
-        self.bpm = 120
+        self.bpm = BPM_PADRAO
         self.gerador_midi = GeradorMIDI(bpm_inicial=self.bpm)
         
     def tocar(self):
@@ -54,7 +63,7 @@ class Maestro:
         notas_tocando = {}
         
         while self.tocando and any(voz.has_next() for voz in vozes):
-            duracao_beat = 60.0 / self.bpm
+            duracao_beat = SEGUNDOS_POR_MINUTO / self.bpm
             teve_evento = False
             
             for voz in vozes:
@@ -64,7 +73,7 @@ class Maestro:
                 # Gerencia o atraso inicial de cada voz
                 if beats[voz.id_voz] < voz.atraso_inicial:
                     beats[voz.id_voz] += 1
-                    self.gerador_midi.registrar_pausa(voz.id_voz, 1.0)
+                    self.gerador_midi.registrar_pausa(voz.id_voz, DURACAO_BEAT_PADRAO)
                     continue
                 
                 token = voz.ler_proximo_token()
@@ -90,22 +99,22 @@ class Maestro:
         if tipo == 'NOTA':
             nota = token['char']
             self.reproducao.reproduzirNota(nota, voz.oitava_atual, voz.volume_atual, voz.canal)
-            self.gerador_midi.registrar_nota(voz.id_voz, voz.canal, nota, voz.oitava_atual, voz.volume_atual, 1.0)
+            self.gerador_midi.registrar_nota(voz.id_voz, voz.canal, nota, voz.oitava_atual, voz.volume_atual, DURACAO_BEAT_PADRAO)
             notas_tocando[voz.id_voz] = (nota, voz.oitava_atual, voz.canal)
             
         elif tipo == 'PAUSA':
-            self.gerador_midi.registrar_pausa(voz.id_voz, 1.0)
+            self.gerador_midi.registrar_pausa(voz.id_voz, DURACAO_BEAT_PADRAO)
             
         elif tipo == 'INSTRUMENTO':
             self.reproducao.setInstrumento(voz.instrumento_atual, voz.canal)
             self.gerador_midi.registrar_instrumento(voz.id_voz, voz.canal, voz.instrumento_atual)
             
         elif tipo == 'BPM_UP':
-            self.bpm += 10
+            self.bpm += BPM_AJUSTE
             self.gerador_midi.alterar_bpm(self.bpm)
             
         elif tipo == 'BPM_DOWN':
-            self.bpm = max(10, self.bpm - 10)
+            self.bpm = max(BPM_MINIMO, self.bpm - BPM_AJUSTE)
             self.gerador_midi.alterar_bpm(self.bpm)
 
     def _silenciar_notas(self, notas_tocando):

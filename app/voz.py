@@ -1,3 +1,39 @@
+# Constantes de Configuração de Voz e MIDI
+OITAVA_MAXIMA = 9
+OITAVA_MINIMA = 0
+OITAVA_TETO_CICLO = 6
+OITAVA_MIN_BASE_CICLO = 3
+TAMANHO_CICLO_VOZ = 4
+
+VOLUME_MAXIMO = 127
+VOLUME_TETO_CICLO = 100
+VOLUME_DECREMENTO_CICLO = 20
+
+CANAIS_MIDI_TOTAL = 16
+
+# Instrumentos MIDI Mapeados
+INSTRUMENTO_PIANO = 0
+INSTRUMENTO_ORGAN = 20
+INSTRUMENTO_HARPSICHORD = 6
+INSTRUMENTO_BASSOON = 70
+INSTRUMENTO_HARMONICA = 22
+INSTRUMENTO_TUBULAR_BELLS = 14
+INSTRUMENTO_CHURCH_ORGAN = 19
+INSTRUMENTO_BAGPIPE = 109
+
+INSTRUMENTOS_CICLICOS = [
+    INSTRUMENTO_PIANO,
+    INSTRUMENTO_ORGAN,
+    INSTRUMENTO_HARPSICHORD,
+    INSTRUMENTO_BASSOON
+]
+
+MAPA_INST_INICIAL = {
+    '!': INSTRUMENTO_HARMONICA,
+    ';': INSTRUMENTO_TUBULAR_BELLS,
+    ',': INSTRUMENTO_CHURCH_ORGAN
+}
+
 class Voz:
     def __init__(self, id_voz: int, linha_texto: str):
         self.id_voz = id_voz
@@ -5,18 +41,17 @@ class Voz:
         
         # Atributos cíclicos ou baseados no ID da voz
         # Oitavas: V0=6, V1=5, V2=4, V3=3, V4=6, ...
-        self.oitava_base = 6 - (id_voz % 4)
-        if self.oitava_base < 3:
-            self.oitava_base = 6 # Caso a conta dê errado, default seguro. Mas 6, 5, 4, 3 está correto.
+        self.oitava_base = OITAVA_TETO_CICLO - (id_voz % TAMANHO_CICLO_VOZ)
+        if self.oitava_base < OITAVA_MIN_BASE_CICLO:
+            self.oitava_base = OITAVA_TETO_CICLO # Caso a conta dê errado, default seguro. Mas 6, 5, 4, 3 está correto.
 
         # Volume: V0=100, V1=80, V2=60, V3=40
-        self.volume_base = max(100 - (id_voz % 4) * 20, 0)
+        self.volume_base = max(VOLUME_TETO_CICLO - (id_voz % TAMANHO_CICLO_VOZ) * VOLUME_DECREMENTO_CICLO, 0)
         
         # Instrumentos: V0=Piano(0), V1=Organ(20), V2=Harpsichord(6), V3=Bassoon(70)
-        instrumentos = [0, 20, 6, 70]
-        self.instrumento_base = instrumentos[id_voz % 4]
+        self.instrumento_base = INSTRUMENTOS_CICLICOS[id_voz % TAMANHO_CICLO_VOZ]
         
-        self.canal = id_voz % 16 # MIDI suporta canais de 0 a 15
+        self.canal = id_voz % CANAIS_MIDI_TOTAL # MIDI suporta canais de 0 a 15
         
         self.reiniciar_estado()
         
@@ -43,9 +78,8 @@ class Voz:
             pos += 1
 
         # Caractere de instrumento inicial?
-        MAPA_INST = {'!': 22, ';': 14, ',': 19}
-        if pos < len(texto) and texto[pos] in MAPA_INST:
-            novo_inst = MAPA_INST[texto[pos]]
+        if pos < len(texto) and texto[pos] in MAPA_INST_INICIAL:
+            novo_inst = MAPA_INST_INICIAL[texto[pos]]
             self.instrumento_base  = novo_inst
             self.instrumento_atual = novo_inst
             pos += 1
@@ -103,27 +137,27 @@ class Voz:
         # Mudança de Instrumento
         elif char == '!':
             token['tipo'] = 'INSTRUMENTO'
-            token['valor'] = 22 # Harmonica
-            self.instrumento_atual = 22
+            token['valor'] = INSTRUMENTO_HARMONICA
+            self.instrumento_atual = INSTRUMENTO_HARMONICA
         elif char == ';':
             token['tipo'] = 'INSTRUMENTO'
-            token['valor'] = 14 # Tubular Bells
-            self.instrumento_atual = 14
+            token['valor'] = INSTRUMENTO_TUBULAR_BELLS
+            self.instrumento_atual = INSTRUMENTO_TUBULAR_BELLS
         elif char == ',':
             token['tipo'] = 'INSTRUMENTO'
-            token['valor'] = 19 # Church Organ
-            self.instrumento_atual = 19
+            token['valor'] = INSTRUMENTO_CHURCH_ORGAN
+            self.instrumento_atual = INSTRUMENTO_CHURCH_ORGAN
         # Controle de Oitava
         elif char == '?':
             token['tipo'] = 'OITAVA_UP'
-            self.oitava_atual = min(self.oitava_atual + 1, 9)
+            self.oitava_atual = min(self.oitava_atual + 1, OITAVA_MAXIMA)
         elif char == 'V':
             token['tipo'] = 'OITAVA_DOWN'
-            self.oitava_atual = max(self.oitava_atual - 1, 0)
+            self.oitava_atual = max(self.oitava_atual - 1, OITAVA_MINIMA)
         # Controle de Volume
         elif char == ' ':
             token['tipo'] = 'VOLUME_DOUBLE'
-            self.volume_atual = min(self.volume_atual * 2, 127)
+            self.volume_atual = min(self.volume_atual * 2, VOLUME_MAXIMO)
         # Controle de BPM Global (afeta todas as vozes, mas emitimos como evento)
         elif char == '>':
             token['tipo'] = 'BPM_UP'
@@ -132,8 +166,8 @@ class Voz:
         # Vogais -> Gaita de Foles (MIDI 109 = Bagpipe)
         elif char in ['O', 'I', 'U', 'o', 'i', 'u']:
             token['tipo'] = 'INSTRUMENTO'
-            token['valor'] = 109
-            self.instrumento_atual = 109
+            token['valor'] = INSTRUMENTO_BAGPIPE
+            self.instrumento_atual = INSTRUMENTO_BAGPIPE
         # Regra de repetição (consoantes e outros não classificados)
         else:
             if char.isalpha() or char.isdigit() or not char.isspace():
