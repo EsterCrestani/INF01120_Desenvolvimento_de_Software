@@ -13,7 +13,7 @@ DURACAO_BEAT_PADRAO = 1.0
 # Limites de Oitava e Volume (aplicados na mutação de estado da voz)
 OITAVA_MAXIMA = 9
 OITAVA_MINIMA = 0
-VOLUME_MAXIMO = 127
+VOLUME_MAXIMO = 100
 INSTRUMENTO_MAXIMO = 127  # programa MIDI máximo (0-127)
 
 # Ajuste de Andamento (BPM)

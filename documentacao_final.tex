@@ -111,7 +111,7 @@ O parser sintático deve classificar individualmente cada caractere do texto de 
   ; & Altera o instrumento da voz atual para \textit{Tubular Bells} (MIDI 14). \\
   , & Altera o instrumento da voz atual para \textit{Church Organ} (MIDI 19). \\
   O, I, U & Altera o instrumento da voz atual para \textit{Bagpipe} / Gaita de Foles (MIDI 109). \\
-  + & Aumenta o volume da voz atual em 10 (limitado a 127). \\
+  + & Aumenta o volume da voz atual em 10 (limitado a 100). \\
   - & Diminui o volume da voz atual em 10 (limitado a 0). \\
   ? & Sobe a oitava da voz atual em 1. Se ultrapassar o teto (9), retorna à oitava base da voz. \\
   V & Desce a oitava da voz atual em 1 (limitado ao mínimo absoluto de 0). \\
@@ -220,7 +220,7 @@ Todos os eventos musicais e modificações de estado implementam a classe abstra
       \item \texttt{TokenInstrumentoIncremento}: Soma um deslocamento inteiro ao programa do instrumento atual da voz, respeitando o limite MIDI.
       \item \texttt{TokenOitavaUp}: Aumenta a oitava da voz. Caso exceda 9, retorna para a oitava cíclica base.
       \item \texttt{TokenOitavaDown}: Diminui a oitava da voz, com limite mínimo em 0.
-      \item \texttt{TokenVolumeUp}: Aumenta o volume dinâmico da voz atual em 10, limitado ao volume máximo MIDI de 127.
+      \item \texttt{TokenVolumeUp}: Aumenta o volume dinâmico da voz atual em 10, limitado ao volume máximo de 100.
       \item \texttt{TokenVolumeDown}: Diminui o volume dinâmico da voz atual em 10, limitado ao mínimo de 0.
 
       \item \texttt{TokenIgnore}: Representa espaços adicionais e caracteres de formatação descartáveis.

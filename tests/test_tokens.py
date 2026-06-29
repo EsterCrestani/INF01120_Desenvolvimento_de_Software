@@ -71,8 +71,8 @@ def test_token_oitava_down_limite_minimo(voz_padrao):
 # --- Testes de Limites de Volume ---
 
 def test_token_volume_up_limite_maximo(voz_padrao):
-    """Testa se aumentar o volume é travado em VOLUME_MAXIMO (127)."""
-    voz_padrao.volume_atual = 125
+    """Testa se aumentar o volume é travado em VOLUME_MAXIMO (100)."""
+    voz_padrao.volume_atual = 95
     token = TokenVolumeUp('+')
     token.processar(voz_padrao, None, {})
     assert voz_padrao.volume_atual == VOLUME_MAXIMO
