@@ -1,0 +1,307 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazilian]{babel}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{parskip}
+
+\geometry{
+  top=2.5cm,
+  bottom=2.5cm,
+  left=3cm,
+  right=2.5cm
+}
+
+% Cores
+\definecolor{azulprincipal}{RGB}{70, 130, 180}
+\definecolor{azulescuro}{RGB}{25, 25, 112}
+\definecolor{cinza}{RGB}{100, 100, 100}
+
+% Cabeçalho e rodapé
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{cinza} Gerador de Sequências Musicais}
+\fancyhead[R]{\small\color{cinza} Desenvolvimento de Software -- UFRGS}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Formatação de títulos
+\titleformat{\section}{\large\bfseries\color{azulescuro}}{}{0em}{\thesection\quad}
+\titleformat{\subsection}{\normalsize\bfseries\color{azulprincipal}}{}{0em}{\thesubsection\quad}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=azulescuro,
+  urlcolor=azulprincipal
+}
+
+% -------------------------------------------------------
+\begin{document}
+
+% Capa
+\begin{titlepage}
+  \centering
+  \vspace*{2cm}
+  {\Large\bfseries\color{azulescuro} UNIVERSIDADE FEDERAL DO RIO GRANDE DO SUL\par}
+  {\large\color{cinza} Instituto de Informática -- INF01120 Desenvolvimento de Software\par}
+  \vspace{1.5cm}
+  {\Large\bfseries\color{azulprincipal} Gerador de Sequências Musicais\par}
+  \vspace{0.5cm}
+  {\large\bfseries Documentação\par}
+  \vspace{2.5cm}
+  {\large\color{cinza} Arthur Rodrigues Padilha\\ Ester de Lemos Crestani\\ Isaac de Brito Pereira\\ Leônidas Lewy\par}
+  \vfill
+  {\normalsize Porto Alegre, Junho de 2026}
+\end{titlepage}
+
+% Sumário
+\tableofcontents
+\newpage
+
+% -------------------------------------------------------
+\section{Visão Geral do Sistema}
+
+O \textbf{Gerador de Sequências Musicais} é uma aplicação desenvolvida em Python que realiza a conversão de textos de entrada estruturados em música polifônica tocada em tempo real (simulando a estrutura de uma fuga no estilo barroco de Bach), exportando simultaneamente a partitura compilada para um arquivo MIDI padrão ao final da execução.
+
+O software interpreta cada linha de texto como uma voz instrumental independente executada concorrentemente (polifonia). A tokenização e a modelagem do comportamento musical seguem regras predeterminadas, atribuindo de forma cíclica propriedades sonoras iniciais a cada voz (como oitavas, volumes, canais de saída e timbres de instrumentos) e aplicando operações dinâmicas a partir de caracteres especiais inseridos na partitura.
+
+\subsection{Tecnologias Utilizadas}
+
+O ecossistema tecnológico do projeto foi estruturado para garantir portabilidade, facilidade de desenvolvimento e eficiência de áudio:
+\begin{itemize}[leftmargin=1.5cm]
+  \item \textbf{Linguagem Base:} Python 3.12 (com tipagem estática assistida).
+  \item \textbf{Interface Gráfica:} \texttt{CustomTkinter} para uma interface visual dinâmica, responsiva e com identidade visual escura (\textit{dark mode} nativo).
+  \item \textbf{Gerenciador de Ambientes:} \texttt{uv} para gerenciamento rápido de dependências e sincronização do interpretador virtual.
+  \item \textbf{Versionamento e Colaboração:} Git e GitHub para ramificações de desenvolvimento e versionamento integrado.
+  \item \textbf{Framework de Testes:} \texttt{pytest} para validação automatizada de regressão e testes de unidade.
+  \item \textbf{Mapeamento Sonoro (Tempo Real):} \texttt{pygame.midi} para disparo de eventos MIDI diretos no sintetizador nativo do sistema operacional.
+  \item \textbf{Persistência e Arquivos:} \texttt{mido} para a escrita polifônica e geração do arquivo multipista \texttt{.mid} gerado na pasta \texttt{saida/}.
+\end{itemize}
+
+% -------------------------------------------------------
+\section{Requisitos Funcionais}
+
+\subsection{RF01 -- Interface e Manipulação de Arquivos}
+O sistema deve disponibilizar uma interface gráfica amigável que permita a digitação direta da sequência musical ou o carregamento de arquivos no formato \texttt{.txt}. O usuário deve poder salvar as edições realizadas na própria caixa de entrada.
+
+\subsection{RF02 -- Mapeamento de Caracteres e Regras da Fuga}
+O parser sintático deve classificar individualmente cada caractere do texto de entrada, mapeando-o para um evento musical ou comando de controle de estado. A tabela a seguir especifica o mapeamento e o comportamento dinâmico de cada símbolo:
+
+\begin{center}
+\small
+\begin{tabular}{lp{11.5cm}}
+  \toprule
+  \textbf{Caractere(s)} & \textbf{Comportamento / Efeito no Sintetizador} \\
+  \midrule
+  A a G & Notas musicais correspondentes de Lá a Sol (oitava configurada na voz). \\
+  H & Nota musical Si bemol. \\
+  Mb & Nota musical Mi bemol (tratado como token único composto de dois caracteres). \\
+  a a h & Silêncio ou Pausa correspondente a 1 beat inteiro de duração. \\
+  ! & Altera o instrumento da voz atual para \textit{Harmonica} (MIDI 22). \\
+  ; & Altera o instrumento da voz atual para \textit{Tubular Bells} (MIDI 14). \\
+  , & Altera o instrumento da voz atual para \textit{Church Organ} (MIDI 19). \\
+  O, I, U & Altera o instrumento da voz atual para \textit{Bagpipe} / Gaita de Foles (MIDI 109). \\
+  + & Aumenta o volume da voz atual em 10 (limitado a 127). \\
+  - & Diminui o volume da voz atual em 10 (limitado a 0). \\
+  ? & Sobe a oitava da voz atual em 1. Se ultrapassar o teto (9), retorna à oitava base da voz. \\
+  V & Desce a oitava da voz atual em 1 (limitado ao mínimo absoluto de 0). \\
+
+  \texttt{[n]} & Inserido no início da linha de texto, gera um atraso de $n$ beats de silêncio para a voz. \\
+  Dígito Par & Soma o valor numérico do dígito ao ID do instrumento MIDI atual da voz (teto 127). \\
+  Dígito Ímpar & Altera o instrumento da voz atual para \textit{Tubular Bells} (MIDI 14). \\
+  Alfanuméricos & Consoantes, vogais (exceto O/I/U) ou símbolos sem mapeamento direto geram silêncio / pausa de 1 beat. \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{RF03 -- Reprodução Polifônica Concorrente}
+O orquestrador do sistema deve processar todas as vozes simultaneamente. As vozes devem avançar batida a batida de forma síncrona. Os silêncios, notas e mudanças de parâmetros devem ser coordenados temporalmente por uma \textit{thread} de tempo real controlada pelo andamento global (BPM).
+
+\subsection{RF04 -- Exportação de Mídia MIDI}
+Ao final da reprodução (ou quando o usuário solicitar a interrupção manual), todos os eventos tocados devem ser consolidados em um arquivo multi-trilhas (Formato 1 de MIDI), gravado em disco com o nome \texttt{saida/arquivo.mid}.
+
+\subsection{RF05 -- Navegação Visual por Telas}
+A interface gráfica deve conduzir o usuário em uma jornada lógica composta por 5 telas:
+\begin{enumerate}
+  \item \textbf{Tela Inicial (PageHome):} Botão de início e modal informativo com as regras de mapeamento do sintetizador.
+  \item \textbf{Tela de Entrada (PageInput):} Área para importar arquivos \texttt{.txt} ou digitar/editar sequências, contendo uma legenda de referência.
+  \item \textbf{Tela de Configurações (PageConfig):} Controles interativos para ajustar o BPM geral do maestro, bem como parâmetros individuais (instrumento base, volume e oitava base) para cada linha de voz importada.
+  \item \textbf{Tela de Execução (PagePlaying):} Exibição dinâmica em tempo real do estado de cada voz (nota atual, oitava, volume, instrumento) acompanhada de um botão de interrupção imediata.
+  \item \textbf{Tela de Conclusão (PageFinished):} Exibe o caminho absoluto do arquivo \texttt{.mid} gerado e botão para retornar ao início.
+\end{enumerate}
+
+% -------------------------------------------------------
+\section{Modelagem das Classes Principais}
+
+A arquitetura do back-end baseia-se na separação rígida de responsabilidades e na adoção do padrão de projeto \textbf{Command} para o processamento de tokens. Isso permite isolar a lógica de controle da máquina de estados do leitor léxico de partituras.
+
+\begin{figure}[h]
+  \centering
+  \small
+  % Representação textual da hierarquia e relações
+  \begin{tabular}{|c|}
+    \hline
+    \textbf{Maestro} (Thread Loop) \\
+    \hline
+    $\downarrow$ gerencia \\
+    \hline
+    \textbf{Voz} (id\_voz, canal, volume, oitava) \\
+    \hline
+    $\downarrow$ contém \\
+    \hline
+    \textbf{Partitura} (Lista de Tokens e cursor) \\
+    \hline
+  \end{tabular}
+  \caption{Hierarquia Estrutural de Execução do Sistema.}
+\end{figure}
+
+\subsection{Classe \texttt{Voz} (\texttt{app/voz.py})}
+Responsável por gerenciar o estado mutável e as propriedades musicais básicas de uma trilha de execução.
+\begin{itemize}
+  \item \textbf{Atributos principais:}
+    \begin{itemize}
+      \item \texttt{id\_voz: int}: Identificador único da voz na execução.
+      \item \texttt{oitava\_base: int}: Oitava inicial de referência, calculada de forma cíclica ($6 - (id\_voz \pmod 4)$).
+      \item \texttt{volume\_base: int}: Volume base da voz, calculado de forma decrescente ($100 - (id\_voz \pmod 4) \times 20$).
+      \item \texttt{instrumento\_base: int}: Programa MIDI de instrumento atribuído ciclicamente (\textit{Piano}, \textit{Organ}, \textit{Harpsichord}, \textit{Bassoon}).
+      \item \texttt{canal: int}: Canal MIDI exclusivo da voz ($id\_voz \pmod{16}$).
+      \item \texttt{oitava\_atual}, \texttt{volume\_atual}, \texttt{instrumento\_atual: int}: Estados correntes que são alterados dinamicamente na reprodução.
+      \item \texttt{partitura: Partitura}: A instância da partitura associada à voz.
+    \end{itemize}
+  \item \textbf{Métodos principais:}
+    \begin{itemize}
+      \item \texttt{reiniciar\_estado()}: Redefine as variáveis dinâmicas de reprodução (\texttt{oitava\_atual}, \texttt{volume\_atual}, \texttt{instrumento\_atual}) de volta aos valores base calculados.
+      \item \texttt{preparar\_para\_tocar(reproducao, gerador\_midi)}: Dispara o reset de estado e registra a inicialização dos instrumentos nos canais de áudio e de MIDI físico.
+      \item \texttt{has\_next() $\rightarrow$ bool}: Retorna se a partitura associada ainda possui tokens a serem processados.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Classe \texttt{Partitura} (\texttt{app/partitura.py})}
+Atua como o analisador léxico (\textit{lexer}) de uma única linha de texto. Lê a string crua e a compila em uma sequência ordenada de objetos \texttt{Token}.
+\begin{itemize}
+  \item \textbf{Atributos principais:}
+    \begin{itemize}
+      \item \texttt{linha\_texto: str}: Texto original da linha correspondente à voz.
+      \item \texttt{tokens: List[Token]}: Lista estática de tokens instanciados na inicialização.
+      \item \texttt{posicao: int}: Cursor que aponta para o próximo token na leitura.
+    \end{itemize}
+  \item \textbf{Métodos principais:}
+    \begin{itemize}
+      \item \texttt{proximo\_token() $\rightarrow$ Token}: Consome e retorna o token apontado pelo cursor, avançando a posição.
+      \item \texttt{reiniciar()}: Move o cursor de posição de volta a zero para permitir novas leituras.
+    \end{itemize}
+  \item \textbf{Processamento Interno:}
+    \begin{itemize}
+      \item \texttt{\_tokenizar(linha)}: Varre a linha caractere por caractere, processando o token duplo \texttt{Mb} e traduzindo o bloco inicial \texttt{[n]} de atraso em $n$ instâncias consecutivas de \texttt{TokenPausa}.
+      \item \texttt{\_classificar(char, nota\_anterior)}: Mapeia o caractere para sua respectiva subclasse de \texttt{Token}, classificando consoantes e outros caracteres não mapeados diretamente como pausas (\texttt{TokenPausa}).
+    \end{itemize}
+\end{itemize}
+
+\subsection{Padrão Command: A Estrutura de \texttt{Token} (\texttt{app/tokens.py})}
+Todos os eventos musicais e modificações de estado implementam a classe abstrata \texttt{Token}. Cada classe herdeira contém a responsabilidade de processar suas consequências na voz e no maestro.
+\begin{itemize}
+  \item \textbf{Atributo Base \texttt{ocupa\_beat: bool}:} Determina se o token bloqueia a execução da voz até a próxima batida temporal (como notas e pausas) ou se é processado instantaneamente antes do avanço temporal (como mudanças de instrumento, volume, oitava ou andamento global).
+  \item \textbf{Método \texttt{processar(voz, maestro, notas\_tocando)}:} Aplica o efeito do token.
+  \item \textbf{Hierarquia de Subclasses:}
+    \begin{itemize}
+      \item \texttt{TokenNota}: Atribui a nota atual à voz, dispara o som no hardware através da \texttt{ReproducaoAudio} e registra o evento na trilha apropriada do \texttt{GeradorMIDI}. Ocupa beat.
+      \item \texttt{TokenPausa}: Insere um beat de silêncio na reprodução e registra a duração correspondente no \texttt{GeradorMIDI}. Ocupa beat.
+      \item \texttt{TokenInstrumento}: Altera o timbre atual da voz na reprodução e no arquivo MIDI.
+      \item \texttt{TokenInstrumentoIncremento}: Soma um deslocamento inteiro ao programa do instrumento atual da voz, respeitando o limite MIDI.
+      \item \texttt{TokenOitavaUp}: Aumenta a oitava da voz. Caso exceda 9, retorna para a oitava cíclica base.
+      \item \texttt{TokenOitavaDown}: Diminui a oitava da voz, com limite mínimo em 0.
+      \item \texttt{TokenVolumeUp}: Aumenta o volume dinâmico da voz atual em 10, limitado ao volume máximo MIDI de 127.
+      \item \texttt{TokenVolumeDown}: Diminui o volume dinâmico da voz atual em 10, limitado ao mínimo de 0.
+
+      \item \texttt{TokenIgnore}: Representa espaços adicionais e caracteres de formatação descartáveis.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Classe \texttt{Maestro} (\texttt{app/maestro.py})}
+Funciona como o núcleo orquestrador. Gerencia o tempo e coordena as interações paralelas entre as vozes, áudio físico e gravação MIDI.
+\begin{itemize}
+  \item \textbf{Atributos principais:}
+    \begin{itemize}
+      \item \texttt{reproducao: ReproducaoAudio}: Ponte de comunicação de áudio instantâneo.
+      \item \texttt{gerador\_midi: GeradorMIDI}: Escritor de arquivo MIDI físico.
+      \item \texttt{bpm: int}: Andamento global do loop em tempo real (inicializado em 120).
+      \item \texttt{vozes: List[Voz]}: Conjunto de vozes criadas para a reprodução atual.
+      \item \texttt{tocando: bool}: Flag que controla a atividade da \textit{thread} de reprodução.
+    \end{itemize}
+  \item \textbf{Métodos principais:}
+    \begin{itemize}
+      \item \texttt{preparar(texto)}: Quebra a partitura inserida pelo usuário em múltiplas linhas, instanciando os respectivos objetos \texttt{Voz} e recriando o gerador de arquivos MIDI com o andamento inicial padrão.
+      \item \texttt{tocar()}: Define a flag \texttt{tocando} como verdadeira, dispara a inicialização do áudio de cada voz e cria uma \textit{thread} dedicada para executar o loop musical em segundo plano (evitando travamento da interface).
+      \item \texttt{\_loop\_musical()}: Executa um loop enquanto existirem tokens a processar. Para cada batida (beat), drena de cada voz todos os tokens de controle instantâneos até consumir um token que ocupa beat (ou esgotar a voz). Após varrer todas as trilhas, coloca a thread em suspensão (\texttt{time.sleep(duracao\_beat)}) e desliga (\textit{note off}) as notas tocadas no beat que se encerrou.
+      \item \texttt{parar()}: Força o término imediato da thread de execução, silencia todas as saídas de som abertas e dispara o retorno de callback para a UI.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Classe \texttt{ReproducaoAudio} (\texttt{app/reproducao\_audio.py})}
+Abstrai a integração com o sintetizador físico local do sistema utilizando a biblioteca \texttt{pygame.midi}.
+\begin{itemize}
+  \item \textbf{Métodos principais:}
+    \begin{itemize}
+      \item \texttt{reproduzir\_nota(nota, oitava, volume, canal)}: Traduz o caractere e a oitava em um número inteiro absoluto de nota MIDI (ex: C4 = 60) e emite uma mensagem \texttt{note\_on}.
+      \item \texttt{silenciar\_nota(nota, oitava, canal)}: Emite uma mensagem \texttt{note\_off} para o número MIDI correspondente à nota.
+      \item \texttt{set\_instrumento\_no\_canal(id\_midi, canal)}: Emite comando \texttt{program\_change} para redefinir o instrumento de reprodução associado ao canal.
+      \item \texttt{parar\_reproducao()}: Emite o sinal padrão \texttt{All Notes Off} em todos os 16 canais para cessar qualquer emissão sonora indesejada.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Classe \texttt{GeradorMIDI} (\texttt{app/gerador\_midi.py})}
+Estrutura um arquivo multipista usando a biblioteca \texttt{mido} em formato síncrono.
+\begin{itemize}
+  \item \textbf{Funcionamento:} Cada voz de entrada é mapeada para uma trilha (\texttt{MidiTrack}) distinta no arquivo MIDI de saída (Formato 1). O andamento (\textit{tempo}) global é inserido em uma trilha de metadados dedicada (Track 0). As pausas e durações de notas são inseridas no arquivo com controle fino de delta-tempo medido em ticks por beat.
+\end{itemize}
+
+% -------------------------------------------------------
+\section{Arquitetura e Suíte de Testes}
+
+A validação de regressão e corretude lógica do software é realizada por meio de uma suíte de testes automatizados unitários e de integração utilizando a biblioteca \texttt{pytest}.
+
+\subsection{Testes Disponíveis}
+A pasta \texttt{tests/} contém os seguintes módulos de teste desenvolvidos:
+\begin{itemize}
+  \item \textbf{\texttt{test\_voz.py}:} Valida a atribuição cíclica automática de oitava base, volume base, instrumento inicial e canal MIDI para múltiplos IDs de voz. Testa também se o método de reiniciar estado limpa os parâmetros mutados corretamente.
+  \item \textbf{\texttt{test\_partitura.py}:} Valida as funções de navegação do cursor (\texttt{has\_next}, \texttt{proximo\_token}), a classificação dos dígitos (pares/ímpares), a lógica de atraso \texttt{[n]}, a geração de silêncio/pausa para caracteres não mapeados e a extração do token duplo de nota \texttt{Mb}.
+  \item \textbf{\texttt{test\_tokens.py}:} Valida o isolamento dos efeitos colaterais de cada tipo de token e o comportamento das regras de limite (\textit{clamping}), como teto de volume, teto de instrumento e ciclicidade da oitava ao subir.
+  \item \textbf{\texttt{test\_maestro.py}:} Valida a separação de linhas de texto cruas em instâncias de voz, a funcionalidade da flag de controle de threads do maestro e o comportamento que impede a alteração de BPM através do texto da partitura.
+  \item \textbf{\texttt{test\_gerador\_midi.py}:} Garante a corretude matemática do conversor de notas e oitavas para números MIDI correspondentes, tratando inclusive maiúsculas/minúsculas e limites extremos de oitava (como clamp em 0 e 127).
+  \item \textbf{\texttt{test\_fuga.py}:} Teste de integração de alto nível que simula a preparação de partituras polifônicas concorrentes e valida a exportação física do arquivo \texttt{.mid} em diretórios temporários controlados.
+  \item \textbf{\texttt{testReproducao.py}:} Arquivo auxiliar para verificação auditiva manual do hardware de som local.
+\end{itemize}
+
+Para executar todos os testes locais de forma automatizada, utiliza-se o comando:
+\begin{verbatim}
+python -m pytest tests/ -v
+\end{verbatim}
+
+% -------------------------------------------------------
+\section{Divisão de Responsabilidades}
+
+A matriz de atribuições das tarefas e desenvolvimento do sistema foi dividida de forma harmônica entre os integrantes da equipe da seguinte forma:
+
+\begin{center}
+\small
+\begin{tabular}{lp{9cm}}
+  \toprule
+  \textbf{Integrante} & \textbf{Responsabilidade Principal no Sistema} \\
+  \midrule
+  \textbf{Arthur Padilha} & Orquestração concorrente de threads, classe \texttt{Maestro} e a respectiva suíte de testes de controle (\texttt{test\_maestro.py}). \\
+  \textbf{Ester Crestani} & Arquitetura visual com CustomTkinter (as 5 páginas do fluxo visual), classe de controle de estados de trilha \texttt{Voz}, tokenizer de entrada \texttt{Partitura} e testes associados. \\
+  \textbf{Isaac Pereira} & Mecanismo de reprodução física de áudio (\texttt{pygame.midi}), controle de oscilação do sintetizador do OS, gerador de saída MIDI (\texttt{mido}) e teste manual de áudio. \\
+  \textbf{Leônidas Lewy} & Arquitetura base do padrão Command para processamento de tokens, refatoração e implementação da classe \texttt{Partitura} e seus testes unitários. \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\end{document}

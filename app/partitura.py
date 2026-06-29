@@ -2,6 +2,7 @@ from typing import List
 
 from app.constantes_musicais import (
     INSTRUMENTO_TUBULAR_BELLS,
+    INSTRUMENTO_BAGPIPE,
     MAPA_INSTRUMENTO_SIMBOLO,
     NOTAS,
     PAUSAS,
@@ -14,9 +15,8 @@ from app.tokens import (
     TokenInstrumentoIncremento,
     TokenOitavaUp,
     TokenOitavaDown,
-    TokenVolumeDouble,
-    TokenBpmUp,
-    TokenBpmDown,
+    TokenVolumeUp,
+    TokenVolumeDown,
     TokenIgnore,
 )
 
@@ -75,6 +75,11 @@ def _tokenizar(linha: str) -> List[Token]:
                 tokens.extend(pausas)
                 continue
 
+        # Ignora espaços em branco como delimitadores puros de notas
+        if linha[i] == ' ':
+            i += 1
+            continue
+
         char, i = _proximo_caractere(linha, i)
         token, nota_anterior = _classificar(char, nota_anterior)
         tokens.append(token)
@@ -117,29 +122,30 @@ def _classificar(char: str, nota_anterior: str | None) -> tuple[Token, str | Non
         # Troca de instrumento por símbolo (! ; ,)
         case c if c in MAPA_INSTRUMENTO_SIMBOLO:
             return TokenInstrumento(char, MAPA_INSTRUMENTO_SIMBOLO[char]), nota_anterior
+        # Gaita de Foles (O, I, U)
+        case c if c in ['O', 'I', 'U']:
+            return TokenInstrumento(char, INSTRUMENTO_BAGPIPE), nota_anterior
         # Controle de oitava
         case '?':
             return TokenOitavaUp(char), nota_anterior
         case 'V':
             return TokenOitavaDown(char), nota_anterior
-        # Controle de volume
-        case ' ':
-            return TokenVolumeDouble(char), nota_anterior
-        # Controle de BPM global
-        case '>':
-            return TokenBpmUp(char), nota_anterior
-        case '<':
-            return TokenBpmDown(char), nota_anterior
+        # Controle de volume (+ / -)
+        case '+':
+            return TokenVolumeUp(char), nota_anterior
+        case '-':
+            return TokenVolumeDown(char), nota_anterior
+        # Controle de BPM global (removido, ignorado textualmente)
+        case '>' | '<':
+            return TokenIgnore(char), nota_anterior
         # Dígitos -> troca de instrumento (par: incrementa o atual; ímpar: Tubular Bells)
         case c if c.isdigit():
             digito = int(char)
             if digito % 2 == 0:
                 return TokenInstrumentoIncremento(char, digito), nota_anterior
             return TokenInstrumento(char, INSTRUMENTO_TUBULAR_BELLS), nota_anterior
-        # Regra de repetição (consoantes, vogais O/I/U e outros não classificados)
+        # Consoantes e caracteres não mapeados geram silêncio/pausa
         case c if c.isalpha() or not c.isspace():
-            if nota_anterior:
-                return TokenNota(nota_anterior), nota_anterior
             return TokenPausa(char), nota_anterior
         # Caracteres ignorados (espaços que não dobram volume, etc.)
         case _:

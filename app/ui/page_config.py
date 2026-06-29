@@ -74,18 +74,18 @@ class PageConfig(ctk.CTkFrame):
         linha = ctk.CTkFrame(bloco, fg_color="transparent")
         linha.pack()
 
-        inst_atual = voz.instrumento_atual
-        idx = IDS_MIDI.index(inst_atual) if inst_atual in IDS_MIDI else 0
+        inst_base = voz.instrumento_base
+        idx = IDS_MIDI.index(inst_base) if inst_base in IDS_MIDI else 0
         self._dropdown(linha, "Instrumento:", NOMES_OPT, NOMES_OPT[idx],
-                       lambda val, v=voz: setattr(v, "instrumento_atual",
-                                                  IDS_MIDI[NOMES_OPT.index(val)]))
+                       lambda val, v=voz: setattr(v, "instrumento_base",
+                                                   IDS_MIDI[NOMES_OPT.index(val)]))
 
         oitavas = [f"Oitava {i}" for i in range(1, 10)]
         self._dropdown(linha, "Oitava:", oitavas, f"Oitava {voz.oitava_base}",
-                       lambda val, v=voz: setattr(v, "oitava_atual",
-                                                  int(val.replace("Oitava ", ""))))
+                       lambda val, v=voz: setattr(v, "oitava_base",
+                                                   int(val.replace("Oitava ", ""))))
 
-        self._seta(linha, "Volume:", str(voz.volume_atual),
+        self._seta(linha, "Volume:", str(voz.volume_base),
                    lambda lbl, v=voz: self._alt_vol(v, -10, lbl),
                    lambda lbl, v=voz: self._alt_vol(v, +10, lbl))
 
@@ -126,8 +126,8 @@ class PageConfig(ctk.CTkFrame):
         lbl.configure(text=f"{novo} BPM")
 
     def _alt_vol(self, voz, delta, lbl):
-        novo = max(0, min(127, voz.volume_atual + delta))
-        voz.volume_atual = novo
+        novo = max(0, min(100, voz.volume_base + delta))
+        voz.volume_base = novo
         lbl.configure(text=str(novo))
 
     def _tocar(self):

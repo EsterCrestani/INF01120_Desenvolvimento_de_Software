@@ -105,11 +105,18 @@ class TokenOitavaDown(Token):
         voz.oitava_atual = max(voz.oitava_atual - 1, OITAVA_MINIMA)
 
 
-class TokenVolumeDouble(Token):
-    tipo = 'VOLUME_DOUBLE'
+class TokenVolumeUp(Token):
+    tipo = 'VOLUME_UP'
 
     def processar(self, voz: Voz, maestro: Maestro, notas_tocando: dict):
-        voz.volume_atual = min(voz.volume_atual * 2, VOLUME_MAXIMO)
+        voz.volume_atual = min(voz.volume_atual + 10, VOLUME_MAXIMO)
+
+
+class TokenVolumeDown(Token):
+    tipo = 'VOLUME_DOWN'
+
+    def processar(self, voz: Voz, maestro: Maestro, notas_tocando: dict):
+        voz.volume_atual = max(voz.volume_atual - 10, 0)
 
 
 class TokenBpmUp(Token):

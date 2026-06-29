@@ -41,6 +41,28 @@ class Voz:
         self.partitura = Partitura(linha_texto)
         self.nota_atual: str | None = None
 
+        # Varre os tokens iniciais (antes da primeira nota ou pausa) 
+        # para extrair as configurações base especificadas no texto
+        for token in self.partitura.tokens:
+            if token.ocupa_beat:
+                break
+            if token.tipo == 'INSTRUMENTO':
+                if hasattr(token, 'valor'):
+                    self.instrumento_base = token.valor
+                elif hasattr(token, 'incremento'):
+                    self.instrumento_base = min(self.instrumento_base + token.incremento, 127)
+            elif token.tipo == 'OITAVA_UP':
+                if self.oitava_base >= 9:
+                    pass  # Não cicla a base inicial de forma ruidosa
+                else:
+                    self.oitava_base += 1
+            elif token.tipo == 'OITAVA_DOWN':
+                self.oitava_base = max(self.oitava_base - 1, 0)
+            elif token.tipo == 'VOLUME_UP':
+                self.volume_base = min(self.volume_base + 10, 100)
+            elif token.tipo == 'VOLUME_DOWN':
+                self.volume_base = max(self.volume_base - 10, 0)
+
         self.reiniciar_estado()
 
 

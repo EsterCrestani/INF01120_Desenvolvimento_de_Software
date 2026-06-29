@@ -4,7 +4,8 @@ from app.voz import Voz
 from app.tokens import (
     TokenOitavaUp,
     TokenOitavaDown,
-    TokenVolumeDouble,
+    TokenVolumeUp,
+    TokenVolumeDown,
     TokenInstrumentoIncremento,
     OITAVA_MAXIMA,
     OITAVA_MINIMA,
@@ -69,15 +70,19 @@ def test_token_oitava_down_limite_minimo(voz_padrao):
 
 # --- Testes de Limites de Volume ---
 
-def test_token_volume_double_limite_maximo(voz_padrao):
-    """Testa se dobrar o volume é travado em VOLUME_MAXIMO (127)."""
-    # A voz 0 tem volume_base 100. 100 * 2 daria 200.
-    voz_padrao.volume_atual = 100
-    token = TokenVolumeDouble(' ')
-    
+def test_token_volume_up_limite_maximo(voz_padrao):
+    """Testa se aumentar o volume é travado em VOLUME_MAXIMO (127)."""
+    voz_padrao.volume_atual = 125
+    token = TokenVolumeUp('+')
     token.processar(voz_padrao, None, {})
-    
     assert voz_padrao.volume_atual == VOLUME_MAXIMO
+
+def test_token_volume_down_limite_minimo(voz_padrao):
+    """Testa se diminuir o volume é travado em 0."""
+    voz_padrao.volume_atual = 5
+    token = TokenVolumeDown('-')
+    token.processar(voz_padrao, None, {})
+    assert voz_padrao.volume_atual == 0
 
 # --- Testes de Limites de Instrumento ---
 

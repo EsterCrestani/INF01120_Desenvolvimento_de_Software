@@ -6,7 +6,8 @@ from app.tokens import (
     TokenPausa,
     TokenInstrumento,
     TokenInstrumentoIncremento,
-    TokenVolumeDouble
+    TokenVolumeUp,
+    TokenVolumeDown,
 )
 from app.constantes_musicais import INSTRUMENTO_TUBULAR_BELLS
 
@@ -65,16 +66,16 @@ def test_classificacao_digitos_par_e_impar():
     assert tokens[1].char == '3'
     assert tokens[1].valor == INSTRUMENTO_TUBULAR_BELLS
 
-def test_regra_repeticao_nota_anterior():
-    """Testa se uma consoante/vogal repete a última nota tocada."""
+def test_caractere_nao_mapeado_gera_pausa():
+    """Testa se uma consoante/vogal não mapeada gera pausa, mesmo após uma nota."""
     partitura = Partitura("AK")
     tokens = partitura.tokens
     
     assert isinstance(tokens[0], TokenNota)
     assert tokens[0].char == 'A'
     
-    assert isinstance(tokens[1], TokenNota)
-    assert tokens[1].char == 'A'
+    assert isinstance(tokens[1], TokenPausa)
+    assert tokens[1].char == 'K'
 
 def test_repeticao_sem_nota_anterior_gera_pausa():
     """Testa se um caractere de repetição no início da string gera pausa."""
@@ -93,11 +94,24 @@ def test_token_duplo_mb():
     assert isinstance(tokens[0], TokenNota)
     assert tokens[0].char == 'Mb'
 
-def test_token_espaco_dobra_volume():
-    """Testa se o caractere de espaço é processado como controle de volume."""
-    partitura = Partitura(" ")
-    tokens = partitura.tokens
+def test_token_volume_up_e_down():
+    """Testa se os caracteres '+' e '-' são processados como controle de volume."""
+    partitura_up = Partitura("+")
+    assert len(partitura_up.tokens) == 1
+    assert isinstance(partitura_up.tokens[0], TokenVolumeUp)
 
-    assert len(tokens) == 1
-    assert isinstance(tokens[0], TokenVolumeDouble)
-    assert tokens[0].char == ' '
+    partitura_down = Partitura("-")
+    assert len(partitura_down.tokens) == 1
+    assert isinstance(partitura_down.tokens[0], TokenVolumeDown)
+
+def test_token_gaita_de_foles():
+    """Testa se os caracteres 'O', 'I' e 'U' são processados como instrumento Gaita de Foles (109)."""
+    from app.constantes_musicais import INSTRUMENTO_BAGPIPE
+    from app.tokens import TokenInstrumento
+    for char in ['O', 'I', 'U']:
+        partitura = Partitura(char)
+        tokens = partitura.tokens
+        assert len(tokens) == 1
+        assert isinstance(tokens[0], TokenInstrumento)
+        assert tokens[0].char == char
+        assert tokens[0].valor == INSTRUMENTO_BAGPIPE

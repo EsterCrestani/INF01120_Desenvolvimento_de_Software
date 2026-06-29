@@ -11,7 +11,7 @@ COLUNAS_LEGENDA = [
         "a–h → Silêncio",
     ]),
     ("Volume:", [
-        "Espaço → dobra o volume",
+        "+ / - → Volume +/-10",
     ]),
     ("Instrumentos:", [
         "! → Harmonica",
@@ -25,8 +25,7 @@ COLUNAS_LEGENDA = [
         "[n] → Atraso de n beats",
     ]),
     ("Especiais:", [
-        "> / < → BPM +/−10",
-        "Consoantes não mapeadas repetem nota anterior ou geram silêncio",
+        "Consoantes não mapeadas geram silêncio",
     ]),
 ]
 
@@ -94,7 +93,7 @@ class PageInput(ctk.CTkFrame):
             for item in itens:
                 ctk.CTkLabel(
                     col, text="• " + item,
-                    font=("Arial", 10), text_color=COR_TEXTO_CINZA,
+                    font=("Arial", 10), text_color="#2c3e50",
                     justify="left", wraplength=130, anchor="w"
                 ).pack(anchor="w")
 

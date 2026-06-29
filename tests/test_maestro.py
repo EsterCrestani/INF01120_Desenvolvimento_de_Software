@@ -23,16 +23,15 @@ def test_maestro_tocar_parar():
     maestro.parar()
     assert maestro.tocando == False
 
-def test_maestro_alteracao_bpm():
+def test_maestro_bpm_nao_altera_por_texto():
     maestro = Maestro()
-    maestro.preparar("> > <") # Sobe 20, desce 10 = 130
+    maestro.preparar("> > <")
     
-    # Executamos o processamento de tokens manualmente para testar a lógica sem threads
+    # O processamento de tokens não deve alterar o BPM
     voz = maestro.vozes[0]
-
     while voz.partitura.has_next():
         token = voz.partitura.proximo_token()
         if token:
             token.processar(voz, maestro, {})
 
-    assert maestro.bpm == 130
+    assert maestro.bpm == 120 # Mantém o padrão inicial

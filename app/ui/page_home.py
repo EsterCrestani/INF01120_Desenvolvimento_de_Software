@@ -49,11 +49,10 @@ class PageHome(ctk.CTkFrame):
             "NOTAS: A a G = Lá a Sol  |  H = Si bemol  |  Mb = Mi bemol",
             "PAUSAS: a a h = Pausa/Silêncio",
             "OITAVAS: ? = Sobe oitava  |  V = Desce oitava",
-            "TEMPO: > = Acelera BPM  |  < = Desacelera BPM",
             "INSTRUMENTOS: ! = Harmonica  |  ; = Tubular Bells  |  , = Church Organ",
-            "O, I, U = Gaita de Foles  |  Espaço = Dobra volume",
+            "O, I, U = Gaita de Foles  |  + / - = Volume +/-10",
             "ATRASO: [n] no início da linha = Voz entra n beats depois",
-            "Consoantes não mapeadas repetem a nota anterior (ou pausa).",
+            "Consoantes não mapeadas geram silêncio / pausa.",
         ]
         for linha in linhas:
             ctk.CTkLabel(
