@@ -12,6 +12,8 @@
 \usepackage{fancyhdr}
 \usepackage{graphicx}
 \usepackage{parskip}
+\usepackage{amsmath}
+\usepackage{amssymb}
 
 \geometry{
   top=2.5cm,
@@ -208,7 +210,7 @@ Atua como o analisador léxico (\textit{lexer}) de uma única linha de texto. L�
 \subsection{Padrão Command: A Estrutura de \texttt{Token} (\texttt{app/tokens.py})}
 Todos os eventos musicais e modificações de estado implementam a classe abstrata \texttt{Token}. Cada classe herdeira contém a responsabilidade de processar suas consequências na voz e no maestro.
 \begin{itemize}
-  \item \textbf{Atributo Base \texttt{ocupa\_beat: bool}:} Determina se o token bloqueia a execução da voz até a próxima batida temporal (como notas e pausas) ou se é processado instantaneamente antes do avanço temporal (como mudanças de instrumento, volume, oitava ou andamento global).
+  \item \textbf{Atributo Base \texttt{ocupa\_beat: bool}:} Determina se o token bloqueia a execução da voz até a próxima batida temporal (como notas e pausas) ou se é processado instantaneamente antes do avanço temporal (como mudanças de instrumento, volume ou oitava).
   \item \textbf{Método \texttt{processar(voz, maestro, notas\_tocando)}:} Aplica o efeito do token.
   \item \textbf{Hierarquia de Subclasses:}
     \begin{itemize}
