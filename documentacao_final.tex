@@ -287,23 +287,5 @@ Para executar todos os testes locais de forma automatizada, utiliza-se o comando
 python -m pytest tests/ -v
 \end{verbatim}
 
-% -------------------------------------------------------
-\section{Divisão de Responsabilidades}
-
-A matriz de atribuições das tarefas e desenvolvimento do sistema foi dividida de forma harmônica entre os integrantes da equipe da seguinte forma:
-
-\begin{center}
-\small
-\begin{tabular}{lp{9cm}}
-  \toprule
-  \textbf{Integrante} & \textbf{Responsabilidade Principal no Sistema} \\
-  \midrule
-  \textbf{Arthur Padilha} & Orquestração concorrente de threads, classe \texttt{Maestro} e a respectiva suíte de testes de controle (\texttt{test\_maestro.py}). \\
-  \textbf{Ester Crestani} & Arquitetura visual com CustomTkinter (as 5 páginas do fluxo visual), classe de controle de estados de trilha \texttt{Voz}, tokenizer de entrada \texttt{Partitura} e testes associados. \\
-  \textbf{Isaac Pereira} & Mecanismo de reprodução física de áudio (\texttt{pygame.midi}), controle de oscilação do sintetizador do OS, gerador de saída MIDI (\texttt{mido}) e teste manual de áudio. \\
-  \textbf{Leônidas Lewy} & Arquitetura base do padrão Command para processamento de tokens, refatoração e implementação da classe \texttt{Partitura} e seus testes unitários. \\
-  \bottomrule
-\end{tabular}
-\end{center}
 
 \end{document}
